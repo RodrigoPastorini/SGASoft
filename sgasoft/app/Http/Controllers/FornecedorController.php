@@ -17,9 +17,9 @@ class FornecedorController extends Controller
     {
         $request->validate([
             'nome' => 'required',
-            'email' => 'required|email|unique:fornecedores,email',
             'cnpj' => 'required|unique:fornecedores,cnpj',
             'cep' => 'required',
+            'endereco' => 'required',
         ]);
 
         Fornecedor::create($request->all());
