@@ -1,0 +1,60 @@
+services:
+    app:
+        build:
+            context: .
+        container_name: sga
+        volumes:
+            - .:/var/www
+        ports:
+            - 8000:8000
+        depends_on:
+            - mysql
+            - redis
+        environment:
+            - DB_HOST=mysql
+            - DB_PORT=3306
+            - DB_DATABASE=laravel
+            - DB_USERNAME=laravel
+            - DB_PASSWORD=secret
+        command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+        networks:
+            - app-network
+
+    mysql:
+        image: mysql:8.0
+        container_name: mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: laravel
+            MYSQL_USER: laravel
+            MYSQL_PASSWORD: secret
+        ports:
+            - "3306:3306"
+        volumes:
+            - dbdata:/var/lib/mysql
+        networks:
+            - app-network
+
+    redis:
+        image: redis:alpine
+        container_name: redis
+        ports:
+            - "6379:6379"
+        networks:
+            - app-network
+
+    mailpit:
+        image: axllent/mailpit
+        container_name: mailpit
+        ports:
+            - "8025:8025"
+        networks:
+            - app-network
+
+volumes:
+    dbdata:
+
+networks:
+    app-network:
+        driver: bridge
