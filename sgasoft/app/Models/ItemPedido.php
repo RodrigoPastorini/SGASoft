@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Fornecedor extends Model
+class ItemPedido extends Model
 {
     use HasFactory;
 
-    protected $table = 'fornecedores';
+    protected $table = 'item_pedidos';
     protected $fillable = [
-        'nome',
-        'email',
-        'cnpj',
-        'cep',
-        'endereco'
+        'pedido_id',
+        'produto_id',
+        'quantidade',
+        'valor_unitario',
+        'subtotal'
     ];
 }

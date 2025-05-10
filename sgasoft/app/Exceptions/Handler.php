@@ -7,6 +7,15 @@ use Throwable;
 
 class Handler extends ExceptionHandler
 {
+
+    public function render($request, Throwable $exception)
+    {
+        if ($request->expectsJson()) {
+            return parent::render($request, $exception);
+        }
+
+        return parent::render($request, $exception);
+    }
     /**
      * The list of the inputs that are never flashed to the session on validation exceptions.
      *

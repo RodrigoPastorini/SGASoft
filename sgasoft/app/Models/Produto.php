@@ -8,4 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Produto extends Model
 {
     use HasFactory;
+
+    protected $table = 'produtos';
+
+    protected $fillable = [
+        'nome',
+        'descricao',
+        'preco',
+    ];
+
+    public function itens()
+    {
+        return $this->hasMany(ItemPedido::class);
+    }
 }
