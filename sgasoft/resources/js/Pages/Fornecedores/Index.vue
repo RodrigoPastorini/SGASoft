@@ -11,6 +11,7 @@ const props = defineProps({ fornecedores: Array })
 
 const form = useForm({
     nome: '',
+    email: '',
     cnpj: '',
     cep: '',
     endereco: ''
@@ -18,7 +19,41 @@ const form = useForm({
 
 const showModal = ref(false)
 
+const validarCNPJ = (cnpj) => {
+    cnpj = cnpj.replace(/[^\d]+/g, '')
+    if (cnpj.length !== 14) return false
+    if (/^(\d)\1+$/.test(cnpj)) return false
+
+    let tamanho = cnpj.length - 2
+    let numeros = cnpj.substring(0, tamanho)
+    let digitos = cnpj.substring(tamanho)
+    let soma = 0
+    let pos = tamanho - 7
+    for (let i = tamanho; i >= 1; i--) {
+        soma += parseInt(numeros.charAt(tamanho - i)) * pos--
+        if (pos < 2) pos = 9
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+    if (resultado !== parseInt(digitos.charAt(0))) return false
+
+    tamanho += 1
+    numeros = cnpj.substring(0, tamanho)
+    soma = 0
+    pos = tamanho - 7
+    for (let i = tamanho; i >= 1; i--) {
+        soma += parseInt(numeros.charAt(tamanho - i)) * pos--
+        if (pos < 2) pos = 9
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+    return resultado === parseInt(digitos.charAt(1))
+}
+
 const submit = () => {
+    if (!validarCNPJ(form.cnpj)) {
+        form.setError('cnpj', 'CNPJ inválido')
+        return
+    }
+
     form.post('/fornecedores', {
         onSuccess: () => {
             form.reset()
@@ -39,7 +74,7 @@ watch(() => form.cep, async (cep) => {
         const response = await fetch(`https://viacep.com.br/ws/${sanitized}/json/`)
         const data = await response.json()
         if (!data.erro) {
-            form.endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`  // Preenchendo logradouro completo
+            form.endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`
         }
     }
 })
@@ -118,7 +153,6 @@ watch(() => form.cep, async (cep) => {
         </table>
     </div>
 
-    <!-- Modal Tailwind -->
     <div v-if="showModal" class="fixed z-50 inset-0 bg-black bg-opacity-50 flex items-center justify-center" @keydown.escape.window="showModal = false">
         <div class="bg-white rounded shadow-lg w-full max-w-lg p-6" role="dialog" aria-modal="true">
             <h2 class="text-xl font-semibold mb-4">Novo Fornecedor</h2>
