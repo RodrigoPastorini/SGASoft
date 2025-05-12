@@ -10,7 +10,11 @@ class Pedido extends Model
     use HasFactory;
 
     protected $table = 'pedidos';
-    protected $fillable = ['fornecedor_id', 'data', 'valor_total'];
+    protected $fillable = [
+        'fornecedor_id',
+        'data',
+        'valor_total'
+    ];
 
     public function itens()
     {
