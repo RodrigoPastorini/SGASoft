@@ -12,7 +12,7 @@ Route::prefix('v1')->group(function () {
         Route::get('fornecedor/{cnpj}/pedidos', [PedidoController::class, 'pedidosPorFornecedor']);
         Route::get('pedidos/{id}', [PedidoController::class, 'show']);
         Route::post('pedidos', [PedidoController::class, 'store']);
-        Route::put('pedidos', [PedidoController::class, 'update']);
+        Route::put('pedidos', [PedidoController::class, 'updateApi']);
         Route::delete('pedidos', [PedidoController::class, 'destroy']);
     });
 });

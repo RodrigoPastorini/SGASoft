@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useForm, router, Link } from '@inertiajs/vue3'
+import {useForm, router, Link, Head} from '@inertiajs/vue3'
 import NavLink from '@/Components/NavLink.vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
@@ -40,6 +40,8 @@ const deletar = (id) => {
 </script>
 
 <template>
+    <Head title="Produtos" />
+
     <nav class="bg-white border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -50,6 +52,7 @@ const deletar = (id) => {
                                 Fornecedores
                             </NavLink>
                         <NavLink :href="route('produtos.index')" :active="route().current('produtos')">Produtos</NavLink>
+                        <NavLink :href="route('pedidos.index')" :active="route().current('pedidos')">Pedidos</NavLink>
                     </div>
                 </div>
                 <div class="hidden sm:flex sm:items-center sm:ms-6">

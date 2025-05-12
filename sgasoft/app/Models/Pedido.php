@@ -13,6 +13,7 @@ class Pedido extends Model
     protected $fillable = [
         'fornecedor_id',
         'data',
+        'status',
         'valor_total',
         'observacao',
     ];
@@ -20,5 +21,10 @@ class Pedido extends Model
     public function itens()
     {
         return $this->hasMany(\App\Models\ItemPedido::class);
+    }
+
+    public function fornecedor()
+    {
+        return $this->belongsTo(Fornecedor::class);
     }
 }

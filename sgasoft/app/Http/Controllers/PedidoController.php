@@ -9,6 +9,7 @@ use App\Models\ItemPedido;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class PedidoController extends Controller
 {
@@ -18,6 +19,20 @@ class PedidoController extends Controller
         'cancelado',
     ];
 
+    public function index(Request $request)
+    {
+        $query = Pedido::with('fornecedor');
+
+        if ($request->has('fornecedor_id') && $request->fornecedor_id) {
+            $query->where('fornecedor_id', $request->fornecedor_id);
+        }
+
+        $pedidos = $query->get();
+        return Inertia::render('Pedidos/Index', [
+            'pedidos' => $pedidos,
+            'fornecedores' => Fornecedor::all(),
+        ]);
+    }
     public function pedidosPorFornecedor($cnpj, Request $request)
     {
         try {
@@ -84,7 +99,7 @@ class PedidoController extends Controller
 
     }
 
-    public function update(Request $request)
+    public function updateApi(Request $request)
     {
         try {
             $data = $request->validate([
@@ -103,6 +118,22 @@ class PedidoController extends Controller
                 'trace' => $e->getTrace()], 500);
         }
     }
+
+    public function updateWeb(Request $request)
+    {
+        $data = $request->validate([
+            'id' => 'required|exists:pedidos,id',
+            'status' => 'required|in:' . implode(',', self::STATUS_PEDIDO),
+            'observacao' => 'nullable|string',
+        ]);
+
+        $pedido = Pedido::findOrFail($data['id']);
+
+        $pedido->update($data);
+
+        return redirect()->route('pedidos.index')->with('success', 'Pedido atualizado com sucesso!');
+    }
+
 
     public function destroy(Request $request)
     {

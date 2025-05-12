@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { useForm, router, Link } from '@inertiajs/vue3'
+import {useForm, router, Link, Head} from '@inertiajs/vue3'
 import NavLink from '@/Components/NavLink.vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
@@ -81,6 +81,8 @@ watch(() => form.cep, async (cep) => {
 </script>
 
 <template>
+    <Head title="Fornecedores" />
+
     <nav class="bg-white border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -94,6 +96,7 @@ watch(() => form.cep, async (cep) => {
                         <NavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</NavLink>
                         <NavLink :href="route('fornecedores.index')" :active="route().current('fornecedores')">Fornecedores</NavLink>
                         <NavLink :href="route('produtos.index')" :active="route().current('produtos')">Produtos</NavLink>
+                        <NavLink :href="route('pedidos.index')" :active="route().current('pedidos')">Pedidos</NavLink>
                     </div>
                 </div>
                 <div class="hidden sm:flex sm:items-center sm:ms-6">
