@@ -53,6 +53,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
     Route::put('/pedidos/{pedido}', [PedidoController::class, 'updateWeb'])->name('pedidos.update');
+    Route::post('/pedidos', [PedidoController::class, 'storeWeb'])->name('pedidos.store');
+    Route::delete('/pedidos/{pedido}', [PedidoController::class, 'destroyWeb'])->name('pedidos.destroy');
 });
 
 

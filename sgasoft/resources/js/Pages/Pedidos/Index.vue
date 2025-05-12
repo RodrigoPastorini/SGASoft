@@ -7,7 +7,8 @@ import DropdownLink from '@/Components/DropdownLink.vue'
 
 const props = defineProps({
     pedidos: Array,
-    fornecedores: Array
+    fornecedores: Array,
+    produtos: Array
 })
 
 const showCreateModal = ref(false)
@@ -16,7 +17,9 @@ const editingPedido = ref(null)
 
 const createForm = useForm({
     fornecedor_id: '',
-    data: '',
+    produto_id: '',
+    date: '',
+    quantidade:'',
     valor_total: '',
     observacao: '',
     status: 'pendente',
@@ -33,6 +36,9 @@ const submit = () => {
         onSuccess: () => {
             createForm.reset()
             showCreateModal.value = false
+        },
+        onError: (errors) => {
+            console.error(errors)
         }
     })
 }
@@ -115,7 +121,7 @@ const atualizar = () => {
             </thead>
             <tbody>
             <tr v-for="pedido in pedidos" :key="pedido.id">
-                <td class="border px-4 py-2">{{ pedido.fornecedor?.nome ?? '—' }}</td>
+                <td class="border px-4 py-2">{{ pedido.fornecedor?.nome || '—' }}</td>
                 <td class="border px-4 py-2">{{ pedido.data }}</td>
                 <td class="border px-4 py-2">R$ {{ Number(pedido.valor_total).toFixed(2) }}</td>
                 <td class="border px-4 py-2 capitalize">{{ pedido.observacao }}</td>
@@ -129,7 +135,6 @@ const atualizar = () => {
         </table>
     </div>
 
-    <!-- Modal de Novo Pedido -->
     <div v-if="showCreateModal" class="fixed z-50 inset-0 bg-black bg-opacity-50 flex items-center justify-center" @keydown.escape.window="showCreateModal = false">
         <div class="bg-white rounded shadow-lg w-full max-w-lg p-6">
             <h2 class="text-xl font-semibold mb-4">Novo Pedido</h2>
@@ -142,20 +147,33 @@ const atualizar = () => {
                     </select>
                     <div v-if="createForm.errors.fornecedor_id" class="text-red-600 text-sm mt-1">{{ createForm.errors.fornecedor_id }}</div>
                 </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Produto</label>
+                    <select v-model="createForm.produto_id" class="mt-1 block w-full border border-gray-300 rounded p-2">
+                        <option value="">Selecione um produto</option>
+                        <option v-for="p in produtos" :key="p.id" :value="p.id">{{ p.nome }}</option>
+                    </select>
+                    <div v-if="createForm.errors.produto_id" class="text-red-600 text-sm mt-1">{{ createForm.errors.produto_id }}</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Quantidade</label>
+                    <input v-model="createForm.quantidade" type="number" min="1" step="1" class="mt-1 block w-full border border-gray-300 rounded p-2" />
+                    <div v-if="createForm.errors.quantidade" class="text-red-600 text-sm mt-1">{{ createForm.errors.quantidade }}</div>
+                </div>
+
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Data</label>
-                    <input v-model="createForm.data" type="date" class="mt-1 block w-full border border-gray-300 rounded p-2" />
-                    <div v-if="createForm.errors.data" class="text-red-600 text-sm mt-1">{{ createForm.errors.data }}</div>
+                    <input v-model="createForm.date" type="date" class="mt-1 block w-full border border-gray-300 rounded p-2" />
+                    <div v-if="createForm.errors.date" class="text-red-600 text-sm mt-1">{{ createForm.errors.date }}</div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Valor Total</label>
-                    <input v-model="createForm.valor_total" type="number" step="0.01" class="mt-1 block w-full border border-gray-300 rounded p-2" />
-                    <div v-if="createForm.errors.valor_total" class="text-red-600 text-sm mt-1">{{ createForm.errors.valor_total }}</div>
-                </div>
+
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Observação</label>
                     <textarea v-model="createForm.observacao" rows="3" class="mt-1 block w-full border border-gray-300 rounded p-2"></textarea>
                 </div>
+
                 <div class="flex justify-end space-x-2">
                     <button type="button" @click="showCreateModal = false" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Salvar</button>
@@ -164,7 +182,6 @@ const atualizar = () => {
         </div>
     </div>
 
-    <!-- Modal de Editar Pedido -->
     <div v-if="showEditModal" class="fixed z-50 inset-0 bg-black bg-opacity-50 flex items-center justify-center" @keydown.escape.window="showEditModal = false">
         <div class="bg-white rounded shadow-lg w-full max-w-lg p-6">
             <h2 class="text-xl font-semibold mb-4">Editar Pedido</h2>
@@ -173,17 +190,19 @@ const atualizar = () => {
                     <label class="block text-sm font-medium text-gray-700">Status</label>
                     <select v-model="editForm.status" class="mt-1 block w-full border border-gray-300 rounded p-2">
                         <option value="pendente">Pendente</option>
-                        <option value="concluido">Concluido</option>
+                        <option value="concluido">Concluído</option>
                         <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
+
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Observação</label>
                     <textarea v-model="editForm.observacao" rows="3" class="mt-1 block w-full border border-gray-300 rounded p-2"></textarea>
                 </div>
+
                 <div class="flex justify-end space-x-2">
                     <button type="button" @click="showEditModal = false" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
-                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Atualizar</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Salvar</button>
                 </div>
             </form>
         </div>

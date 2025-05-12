@@ -21,16 +21,14 @@ class PedidoController extends Controller
 
     public function index(Request $request)
     {
-        $query = Pedido::with('fornecedor');
+        $pedidos = Pedido::with('fornecedor')->orderByDesc('created_at')->get();
+        $fornecedores = Fornecedor::all();
+        $produtos = Produto::all();
 
-        if ($request->has('fornecedor_id') && $request->fornecedor_id) {
-            $query->where('fornecedor_id', $request->fornecedor_id);
-        }
-
-        $pedidos = $query->get();
         return Inertia::render('Pedidos/Index', [
             'pedidos' => $pedidos,
-            'fornecedores' => Fornecedor::all(),
+            'fornecedores' => $fornecedores,
+            'produtos' => $produtos,
         ]);
     }
     public function pedidosPorFornecedor($cnpj, Request $request)
@@ -119,6 +117,67 @@ class PedidoController extends Controller
         }
     }
 
+
+    public function destroy(Request $request)
+    {
+        try {
+            $request->validate([
+                'id' => 'required|exists:pedidos,id',
+            ]);
+
+            Pedido::destroy($request->id);
+            return response()->json(['message' => 'Pedido deletado com sucesso']);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([]);
+        }
+    }
+
+    public function storeWeb(Request $request)
+    {
+        $request->validate([
+            'fornecedor_id' => 'required|exists:fornecedores,id',
+            'produto_id' => 'required|exists:produtos,id',
+            'quantidade' => 'required|numeric|min:1',
+            'status' => 'required|in:' . implode(',', self::STATUS_PEDIDO),
+        ]);
+        DB::beginTransaction();
+        try {
+            $pedido = Pedido::create([
+                'fornecedor_id' => $request['fornecedor_id'],
+                'data' => $request['date'],
+                'observacao' => $request['observacao'] ?? null,
+                'status' => $request['status'] ?? 'pendente',
+                'valor_total' => 0,
+            ]);
+
+
+            $produto = Produto::findOrFail($request['produto_id']);
+
+            ItemPedido::create([
+                'pedido_id' => $pedido->id,
+                'produto_id' => $produto->id,
+                'quantidade' => $request['quantidade'],
+                'valor_unitario' => $produto->preco,
+                'subtotal' => $produto->preco * $request['quantidade'],
+            ]);
+
+            $pedido->update([
+                'valor_total' => $produto->preco * $request['quantidade']
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('pedidos.index')->with('success', 'Pedido criado com sucesso!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Erro ao criar o pedido',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTrace()], 500);
+        }
+
+    }
+
     public function updateWeb(Request $request)
     {
         $data = $request->validate([
@@ -134,19 +193,12 @@ class PedidoController extends Controller
         return redirect()->route('pedidos.index')->with('success', 'Pedido atualizado com sucesso!');
     }
 
-
-    public function destroy(Request $request)
+    public function destroyWeb($id)
     {
-        try {
-            $request->validate([
-                'id' => 'required|exists:pedidos,id',
-            ]);
+        $pedido = Pedido::findOrFail($id);
+        $pedido->delete();
 
-            Pedido::destroy($request->id);
-            return response()->json(['message' => 'Pedido deletado com sucesso']);
+        return redirect()->route('pedidos.index')->with('success', 'Pedido excluído com sucesso!');
 
-        } catch (ModelNotFoundException $e) {
-            return response()->json([]);
-        }
     }
 }
