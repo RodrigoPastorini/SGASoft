@@ -13,7 +13,8 @@ class Pedido extends Model
     protected $fillable = [
         'fornecedor_id',
         'data',
-        'valor_total'
+        'valor_total',
+        'observacao',
     ];
 
     public function itens()

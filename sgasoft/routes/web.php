@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FornecedorController;
+use App\Http\Controllers\ProdutosController;
+use App\Http\Controllers\PedidoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -40,6 +42,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/fornecedores', [FornecedorController::class, 'store'])->name('fornecedores.store');
     Route::put('/fornecedores/{fornecedor}', [FornecedorController::class, 'update'])->name('fornecedores.update');
     Route::delete('/fornecedores/{fornecedor}', [FornecedorController::class, 'destroy'])->name('fornecedores.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/produtos', [ProdutosController::class, 'index'])->name('produtos.index');
+    Route::post('/produtos', [ProdutosController::class, 'store'])->name('produtos.store');
+    Route::delete('/produtos/{produto}', [ProdutosController::class, 'destroy'])->name('produtos.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
 });
 
 

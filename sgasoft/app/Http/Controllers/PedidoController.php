@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\DB;
 
 class PedidoController extends Controller
 {
+    private const STATUS_PEDIDO = [
+        'pendente',
+        'concluido',
+        'cancelado',
+    ];
+
     public function pedidosPorFornecedor($cnpj, Request $request)
     {
         try {
@@ -39,6 +45,7 @@ class PedidoController extends Controller
             'fornecedor_id' => 'required|exists:fornecedores,id',
             'produto_id' => 'required|exists:produtos,id',
             'quantidade' => 'required|numeric|min:1',
+            'status' => 'required|in:' . implode(',', self::STATUS_PEDIDO),
         ]);
         DB::beginTransaction();
         try {
@@ -70,7 +77,7 @@ class PedidoController extends Controller
             return response()->json($pedido->load('itens'), 201);
         } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json([    'error' => 'Erro ao criar o pedido',
+            return response()->json(['error' => 'Erro ao criar o pedido',
                 'message' => $e->getMessage(),
                 'trace' => $e->getTrace()], 500);
         }
@@ -79,24 +86,36 @@ class PedidoController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->validate([
-            'id' => 'required|exists:pedidos,id',
-            'descricao' => 'string',
-            'status' => 'string',
-        ]);
+        try {
+            $data = $request->validate([
+                'id' => 'required|exists:pedidos,id',
+                'observacao' => 'string',
+                'status' => 'required|in:' . implode(',', self::STATUS_PEDIDO),
+            ]);
 
-        $pedido = Pedido::findOrFail($data['id']);
-        $pedido->update($data);
-        return response()->json($pedido);
+            $pedido = Pedido::findOrFail($data['id']);
+            $pedido->update($data);
+            return response()->json($pedido);
+
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Erro ao atualizar o pedido',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTrace()], 500);
+        }
     }
 
     public function destroy(Request $request)
     {
-        $request->validate([
-            'id' => 'required|exists:pedidos,id',
-        ]);
+        try {
+            $request->validate([
+                'id' => 'required|exists:pedidos,id',
+            ]);
 
-        Pedido::destroy($request->id);
-        return response()->json(['message' => 'Pedido deletado com sucesso']);
+            Pedido::destroy($request->id);
+            return response()->json(['message' => 'Pedido deletado com sucesso']);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([]);
+        }
     }
 }

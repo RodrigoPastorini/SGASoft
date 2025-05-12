@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useForm, router, Link } from '@inertiajs/vue3'
 import NavLink from '@/Components/NavLink.vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
@@ -7,54 +7,24 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 
-const props = defineProps({ fornecedores: Array })
+const props = defineProps({
+    produtos: Array,
+    fornecedores: Array
+})
 
 const form = useForm({
     nome: '',
-    email: '',
-    cnpj: '',
-    cep: '',
-    endereco: ''
+    descricao: '',
+    preco: '',
+    cor: '',
+    referencia: '',
+    fornecedor_id:'',
 })
 
 const showModal = ref(false)
 
-const validarCNPJ = (cnpj) => {
-    cnpj = cnpj.replace(/[^\d]+/g, '')
-    if (cnpj.length !== 14) return false
-    if (/^(\d)\1+$/.test(cnpj)) return false
-
-    let tamanho = cnpj.length - 2
-    let numeros = cnpj.substring(0, tamanho)
-    let digitos = cnpj.substring(tamanho)
-    let soma = 0
-    let pos = tamanho - 7
-    for (let i = tamanho; i >= 1; i--) {
-        soma += parseInt(numeros.charAt(tamanho - i)) * pos--
-        if (pos < 2) pos = 9
-    }
-    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
-    if (resultado !== parseInt(digitos.charAt(0))) return false
-
-    tamanho += 1
-    numeros = cnpj.substring(0, tamanho)
-    soma = 0
-    pos = tamanho - 7
-    for (let i = tamanho; i >= 1; i--) {
-        soma += parseInt(numeros.charAt(tamanho - i)) * pos--
-        if (pos < 2) pos = 9
-    }
-    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
-    return resultado === parseInt(digitos.charAt(1))
-}
-
 const submit = () => {
-    if (!validarCNPJ(form.cnpj)) {
-        form.setError('cnpj', 'CNPJ inválido')
-        return
-    }
-
-    form.post('/fornecedores', {
+    form.post('/produtos', {
         onSuccess: () => {
             form.reset()
             showModal.value = false
@@ -63,21 +33,10 @@ const submit = () => {
 }
 
 const deletar = (id) => {
-    if (confirm('Deseja mesmo excluir este fornecedor?')) {
-        router.delete(`/fornecedores/${id}`)
+    if (confirm('Deseja mesmo excluir este produto?')) {
+        router.delete(`/produtos/${id}`)
     }
 }
-
-watch(() => form.cep, async (cep) => {
-    const sanitized = cep.replace(/\D/g, '')
-    if (sanitized.length === 8) {
-        const response = await fetch(`https://viacep.com.br/ws/${sanitized}/json/`)
-        const data = await response.json()
-        if (!data.erro) {
-            form.endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`
-        }
-    }
-})
 </script>
 
 <template>
@@ -85,14 +44,11 @@ watch(() => form.cep, async (cep) => {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex">
-                    <div class="shrink-0 flex items-center">
-                        <Link :href="route('dashboard')">
-                            <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
-                        </Link>
-                    </div>
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <NavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</NavLink>
-                        <NavLink :href="route('fornecedores.index')" :active="route().current('fornecedores')">Fornecedores</NavLink>
+                            <NavLink :href="route('fornecedores.index')" :active="route().current('fornecedores')">
+                                Fornecedores
+                            </NavLink>
                         <NavLink :href="route('produtos.index')" :active="route().current('produtos')">Produtos</NavLink>
                     </div>
                 </div>
@@ -125,29 +81,30 @@ watch(() => form.cep, async (cep) => {
 
     <div class="p-6 max-w-5xl mx-auto">
         <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold">Fornecedores</h1>
-            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" @click="showModal = true">Novo Fornecedor</button>
+            <h1 class="text-2xl font-bold">Produtos</h1>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" @click="showModal = true">Novo Produto</button>
         </div>
 
         <table class="w-full table-auto border-collapse border border-gray-300">
             <thead class="bg-gray-100">
             <tr>
                 <th class="border px-4 py-2">Nome</th>
-                <th class="border px-4 py-2">CNPJ</th>
-                <th class="border px-4 py-2">CEP</th>
-                <th class="border px-4 py-2">Endereco</th>
+                <th class="border px-4 py-2">Fornecedor</th>
+                <th class="border px-4 py-2">Preço</th>
+                <th class="border px-4 py-2">Cor</th>
+                <th class="border px-4 py-2">Referência</th>
                 <th class="border px-4 py-2 text-center">Ações</th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="fornecedor in fornecedores" :key="fornecedor.id">
-                <td class="border px-4 py-2">{{ fornecedor.nome }}</td>
-                <td class="border px-4 py-2">{{ fornecedor.cnpj }}</td>
-                <td class="border px-4 py-2">{{ fornecedor.cep }}</td>
-                <td class="border px-4 py-2">{{ fornecedor.endereco }}</td>
+            <tr v-for="produto in produtos" :key="produto.id">
+                <td class="border px-4 py-2">{{ produto.nome }}</td>
+                <td class="border px-4 py-2">{{ produto.fornecedor?.nome ?? '—' }}</td>
+                <td class="border px-4 py-2">R$ {{ Number(produto.preco).toFixed(2)  }}</td>
+                <td class="border px-4 py-2">{{ produto.cor }}</td>
+                <td class="border px-4 py-2">{{ produto.referencia }}</td>
                 <td class="border px-4 py-2 text-center">
-                    <a :href="`/fornecedores/${fornecedor.id}/edit`" class="text-blue-600 hover:underline mr-2">Editar</a>
-                    <button @click="deletar(fornecedor.id)" class="text-red-600 hover:underline">Excluir</button>
+                    <button @click="deletar(produto.id)" class="text-red-600 hover:underline">Excluir</button>
                 </td>
             </tr>
             </tbody>
@@ -156,7 +113,7 @@ watch(() => form.cep, async (cep) => {
 
     <div v-if="showModal" class="fixed z-50 inset-0 bg-black bg-opacity-50 flex items-center justify-center" @keydown.escape.window="showModal = false">
         <div class="bg-white rounded shadow-lg w-full max-w-lg p-6" role="dialog" aria-modal="true">
-            <h2 class="text-xl font-semibold mb-4">Novo Fornecedor</h2>
+            <h2 class="text-xl font-semibold mb-4">Novo Produto</h2>
             <form @submit.prevent="submit">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Nome</label>
@@ -164,24 +121,32 @@ watch(() => form.cep, async (cep) => {
                     <div v-if="form.errors.nome" class="text-red-600 text-sm mt-1">{{ form.errors.nome }}</div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input v-model="form.email" type="email" class="mt-1 block w-full border border-gray-300 rounded p-2" />
-                    <div v-if="form.errors.email" class="text-red-600 text-sm mt-1">{{ form.errors.email }}</div>
+                    <label class="block text-sm font-medium text-gray-700">Preço</label>
+                    <input v-model="form.preco" type="number" step="0.01" class="mt-1 block w-full border border-gray-300 rounded p-2" />
+                    <div v-if="form.errors.preco" class="text-red-600 text-sm mt-1">{{ form.errors.preco }}</div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">CNPJ</label>
-                    <input v-model="form.cnpj" type="text" class="mt-1 block w-full border border-gray-300 rounded p-2" />
-                    <div v-if="form.errors.cnpj" class="text-red-600 text-sm mt-1">{{ form.errors.cnpj }}</div>
+                    <label class="block text-sm font-medium text-gray-700">Cor</label>
+                    <input v-model="form.cor" type="text" class="mt-1 block w-full border border-gray-300 rounded p-2" />
+                    <div v-if="form.errors.cor" class="text-red-600 text-sm mt-1">{{ form.errors.cor }}</div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">CEP</label>
-                    <input v-model="form.cep" type="text" class="mt-1 block w-full border border-gray-300 rounded p-2" />
-                    <div v-if="form.errors.cep" class="text-red-600 text-sm mt-1">{{ form.errors.cep }}</div>
+                    <label class="block text-sm font-medium text-gray-700">Referência</label>
+                    <input v-model="form.referencia" type="text" class="mt-1 block w-full border border-gray-300 rounded p-2" />
+                    <div v-if="form.errors.referencia" class="text-red-600 text-sm mt-1">{{ form.errors.referencia }}</div>
                 </div>
+
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Endereço</label>
-                    <input v-model="form.endereco" type="text" class="mt-1 block w-full border border-gray-300 rounded p-2 bg-gray-100" readonly />
+                    <label class="block text-sm font-medium text-gray-700">Fornecedor</label>
+                    <select v-model="form.fornecedor_id" class="mt-1 block w-full border border-gray-300 rounded p-2">
+                        <option value="">Selecione um fornecedor</option>
+                        <option v-for="fornecedor in fornecedores" :key="fornecedor.id" :value="fornecedor.id">
+                            {{ fornecedor.nome }}
+                        </option>
+                    </select>
+                    <div v-if="form.errors.fornecedor_id" class="text-red-600 text-sm mt-1">{{ form.errors.fornecedor_id }}</div>
                 </div>
+
                 <div class="flex justify-end space-x-2">
                     <button type="button" @click="showModal = false" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Salvar</button>

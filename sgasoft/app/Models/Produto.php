@@ -13,12 +13,20 @@ class Produto extends Model
 
     protected $fillable = [
         'nome',
-        'descricao',
         'preco',
+        'cor',
+        'referencia',
+        'fornecedor_id',
     ];
 
     public function itens()
     {
         return $this->hasMany(ItemPedido::class);
     }
+
+    public function fornecedor()
+    {
+        return $this->belongsTo(Fornecedor::class);
+    }
+
 }
